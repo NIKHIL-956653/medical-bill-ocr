@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bill-ocr"
+version = "0.1.0"
+description = "Medical Bill OCR pipeline: scans/PDFs to validated Excel."
+authors = [{ name = "Nikhil Chandra Sairam Tokala" }]
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf", "pdfplumber", "pytesseract", "opencv-python",
+    "pillow", "pandas", "openpyxl", "google-genai", "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
