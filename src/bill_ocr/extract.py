@@ -26,7 +26,7 @@ load_dotenv()
 
 # ── config ──────────────────────────────────────────────────────────────
 EXTRACTION_USE_GEMINI = True
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
 MAX_RETRIES = 3
 # ────────────────────────────────────────────────────────────────────────
 
@@ -127,7 +127,7 @@ def extract_fields(bill_text: str, source_file: str | None = None,
                 config=types.GenerateContentConfig(
                     temperature=0.0,
                     max_output_tokens=4096,
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                    thinking_config=types.ThinkingConfig(thinking_level="low"),
                 ),
             )
             raw = (response.text or "").strip()
