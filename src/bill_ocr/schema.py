@@ -46,3 +46,16 @@ class BillData:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BillData":
+        """Rebuild from to_dict() output (e.g. stored JSON). Unknown keys are ignored."""
+        known = {f for f in cls.__dataclass_fields__}
+        kwargs = {k: v for k, v in data.items() if k in known and k != "line_items"}
+        items = []
+        for raw in data.get("line_items") or []:
+            if isinstance(raw, dict):
+                item_known = LineItem.__dataclass_fields__
+                items.append(LineItem(**{k: v for k, v in raw.items() if k in item_known}))
+        kwargs["validation_flags"] = list(kwargs.get("validation_flags") or [])
+        return cls(line_items=items, **kwargs)

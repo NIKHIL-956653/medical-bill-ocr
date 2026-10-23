@@ -40,15 +40,23 @@ def preprocess_image(path: str | Path, debug_dir: str | Path | None = None) -> n
     img = cv2.imread(str(path))
     if img is None:
         raise FileReadError(f"Could not read image: {path}")
+    return preprocess_array(img, name=path.stem, debug_dir=debug_dir)
 
-    debug = _DebugWriter(debug_dir, path.stem)
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def preprocess_array(img: np.ndarray, name: str = "image",
+                     debug_dir: str | Path | None = None) -> np.ndarray:
+    """
+    Same cleanup chain as preprocess_image, for an image already in memory
+    (BGR or grayscale). Used for rendered PDF pages so nothing touches disk.
+    """
+    debug = _DebugWriter(debug_dir, name)
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
     debug.save("1_gray", gray)
 
     if min(gray.shape) < MIN_SIDE_PX:
         gray = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
-        logger.info("%s: upscaled 2x to %dx%d", path.name, gray.shape[1], gray.shape[0])
+        logger.info("%s: upscaled 2x to %dx%d", name, gray.shape[1], gray.shape[0])
         debug.save("2_upscaled", gray)
 
     denoised = cv2.fastNlMeansDenoising(gray, h=10)
@@ -57,7 +65,7 @@ def preprocess_image(path: str | Path, debug_dir: str | Path | None = None) -> n
     angle = _detect_skew_angle(denoised)
     if abs(angle) > 0.1:
         denoised = _rotate(denoised, angle)
-        logger.info("%s: deskewed by %.2f degrees", path.name, angle)
+        logger.info("%s: deskewed by %.2f degrees", name, angle)
         debug.save("4_deskewed", denoised)
 
     binary = cv2.adaptiveThreshold(

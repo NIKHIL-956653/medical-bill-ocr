@@ -65,6 +65,39 @@ Options:
 Output: `results.xlsx` (sheets: **Bills**, **Line Items**) plus
 `results_bills.csv` / `results_line_items.csv`.
 
+## Review web UI
+
+A local web app for checking and correcting extractions before they go to Excel.
+
+```powershell
+pip install -e ".[web]"
+python -m bill_ocr serve            # opens on http://127.0.0.1:8000
+```
+
+- **Upload** PDFs or images (drag and drop, several at once). Each runs through
+  the same pipeline as the CLI in the background.
+- **Review side by side**: the page image on the left, extracted fields on the
+  right. Clicking a field highlights where that value appears on the page,
+  using the OCR word boxes (or the PDF text layer for digital PDFs). No
+  highlight means the value is not on the page, which is a hint it is wrong.
+- **Correct** any field or line item. Fields that differ from the extraction
+  turn yellow, the line-item sum is re-checked live, and saving re-runs the
+  validation checks. A toggle shades low-confidence OCR words.
+- **Export** reviewed bills (or all of them) to the same two-sheet workbook.
+- **Accuracy**: every save keeps both the original extraction and the
+  reviewer's version. The Accuracy view compares them field by field, by week,
+  and by model, so the effect of prompt, model or preprocessing changes is
+  measurable. Same report on the command line:
+
+```powershell
+python -m bill_ocr accuracy
+```
+
+Everything is stored under `data/review/` (SQLite database, uploads, page
+images), which is git-ignored. Every save is also kept as a revision for
+auditing. The server has no login and binds to localhost by default; only use
+`--host 0.0.0.0` on a trusted network.
+
 ## Trust model
 
 | Check | Action on failure |
@@ -89,10 +122,13 @@ Output: `results.xlsx` (sheets: **Bills**, **Line Items**) plus
 pytest tests/ -v
 ```
 
-23 tests — schema, validation math, defensive JSON parsing, export,
-ingest routing — all offline, zero API calls.
+45 tests — schema, validation math, defensive JSON parsing, export,
+ingest routing, value location, accuracy metrics, review storage, and the
+web API — all offline, zero API calls. Install test dependencies with
+`pip install -e ".[dev]"`. Tests that run real OCR skip when Tesseract is
+not installed.
 
 ## Stack
 
 Python 3.10+ · pymupdf · pdfplumber · OpenCV · Tesseract 5 (pytesseract) ·
-Gemini 2.5 Flash (google-genai) · pandas + openpyxl · pytest
+Gemini 2.5 Flash (google-genai) · pandas + openpyxl · FastAPI + SQLite (review UI) · pytest
