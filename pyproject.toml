@@ -14,7 +14,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+web = ["fastapi", "uvicorn", "python-multipart"]
+dev = ["pytest", "httpx", "fastapi", "python-multipart"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"bill_ocr.web" = ["static/*"]
